@@ -1,11 +1,15 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import type { PlayerSide } from "@/features/matches/domain/types/PlayerSide";
+import {
+  PlayerSide,
+  type PlayerSide as PlayerSideType,
+} from "@/features/matches/domain/types/PlayerSide";
+
 import { theme } from "@/shared/theme";
 
 type PlayerSideSelectorProps = {
-  value: PlayerSide;
-  onChange: (value: PlayerSide) => void;
+  value: PlayerSideType;
+  onChange: (value: PlayerSideType) => void;
   disabled?: boolean;
 };
 
@@ -15,19 +19,19 @@ export function PlayerSideSelector({
   disabled = false,
 }: PlayerSideSelectorProps) {
   return (
-    <View style={styles.container}>
+    <View accessibilityRole="radiogroup" style={styles.container}>
       <SelectorOption
         label="Eu"
-        selected={value === "PLAYER"}
+        selected={value === PlayerSide.PLAYER}
         disabled={disabled}
-        onPress={() => onChange("PLAYER")}
+        onPress={() => onChange(PlayerSide.PLAYER)}
       />
 
       <SelectorOption
         label="Adversário"
-        selected={value === "OPPONENT"}
+        selected={value === PlayerSide.OPPONENT}
         disabled={disabled}
-        onPress={() => onChange("OPPONENT")}
+        onPress={() => onChange(PlayerSide.OPPONENT)}
       />
     </View>
   );
@@ -49,6 +53,7 @@ function SelectorOption({
   return (
     <Pressable
       accessibilityRole="radio"
+      accessibilityLabel={label}
       accessibilityState={{
         checked: selected,
         disabled,
@@ -58,8 +63,8 @@ function SelectorOption({
       style={({ pressed }) => [
         styles.option,
         selected && styles.selectedOption,
-        pressed && !disabled && styles.pressedOption,
         disabled && styles.disabledOption,
+        pressed && !disabled && styles.pressedOption,
       ]}
     >
       <Text style={[styles.optionText, selected && styles.selectedOptionText]}>
@@ -77,32 +82,36 @@ const styles = StyleSheet.create({
 
   option: {
     flex: 1,
-    minHeight: 56,
+    minHeight: theme.components.inputHeight,
+
     alignItems: "center",
     justifyContent: "center",
+
     borderWidth: 1,
     borderColor: theme.colors.border,
+
     borderRadius: theme.radius.md,
+
     backgroundColor: theme.colors.surface,
   },
 
   selectedOption: {
     borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary,
-  },
 
-  pressedOption: {
-    opacity: 0.8,
+    backgroundColor: theme.colors.primary,
   },
 
   disabledOption: {
     opacity: 0.5,
   },
 
+  pressedOption: {
+    opacity: 0.8,
+  },
+
   optionText: {
+    ...theme.typography.bodyStrong,
     color: theme.colors.text,
-    fontSize: 16,
-    fontWeight: "600",
   },
 
   selectedOptionText: {

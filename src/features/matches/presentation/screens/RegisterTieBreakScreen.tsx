@@ -2,21 +2,18 @@ import { useCallback, useState } from "react";
 
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 
-import {
-    ActivityIndicator,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
-} from "react-native";
-
-import { SafeAreaView } from "react-native-safe-area-context";
+import { StyleSheet, Text, View } from "react-native";
 
 import { RegisterTieBreakError } from "@/features/matches/application/errors/RegisterTieBreakError";
 
 import { matchDependencies } from "@/features/matches/infrastructure/container/matchDependencies";
 
-import { PrimaryButton } from "@/shared/components";
+import {
+  ErrorState,
+  InlineError,
+  LoadingState,
+  PrimaryButton,
+} from "@/shared/components";
 
 import { theme } from "@/shared/theme";
 
@@ -24,6 +21,8 @@ import { CounterField } from "../components/CounterField";
 
 import { MatchScoreboard } from "../components/MatchScoreboard";
 
+import { ScreenContainer } from "@/shared/components/ScreenContainer";
+import { ScreenHeader } from "@/shared/components/ScreenHeader";
 import { useMatch } from "../hooks/useMatch";
 
 type MatchRouteParams = {
@@ -51,25 +50,22 @@ export function RegisterTieBreakScreen() {
 
   if (isLoading && !match) {
     return (
-      <ScreenState>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-
-        <Text style={styles.stateText}>Carregando tie-break...</Text>
-      </ScreenState>
+      <ScreenContainer scroll={false}>
+        <LoadingState message="Carregando tie-break..." />
+      </ScreenContainer>
     );
   }
 
   if (error || !match || !progress || !matchId) {
     return (
-      <ScreenState>
-        <Text style={styles.errorTitle}>Tie-break indisponível</Text>
-
-        <Text style={styles.stateText}>
-          {error ?? "A partida não está disponível."}
-        </Text>
-
-        <PrimaryButton title="Voltar" onPress={() => router.back()} />
-      </ScreenState>
+      <ScreenContainer scroll={false}>
+        <ErrorState
+          title="Tie-break indisponível"
+          message="A partida não está disponível"
+          actionLabel="Voltar"
+          onAction={() => router.back()}
+        />
+      </ScreenContainer>
     );
   }
 
@@ -77,18 +73,20 @@ export function RegisterTieBreakScreen() {
 
   if (progress.nextRecordType !== "SET_TIE_BREAK") {
     return (
-      <ScreenState>
-        <Text style={styles.errorTitle}>Tie-break não permitido</Text>
-
-        <Text style={styles.stateText}>
-          O placar da partida não está em 6 × 6.
-        </Text>
-
-        <PrimaryButton
-          title="Voltar para a partida"
-          onPress={() => router.back()}
-        />
-      </ScreenState>
+      <ScreenContainer scroll={false}>
+        <View style={styles.centeredState}>
+          <Text style={styles.errorTitle}> Tie-break não permitido </Text>
+          <Text style={styles.stateText}>
+            O placar da partida não está em 6 × 6.
+          </Text>
+          <PrimaryButton
+            title="Voltar para a partida"
+            onPress={() => {
+              router.back();
+            }}
+          />
+        </View>
+      </ScreenContainer>
     );
   }
 
@@ -117,128 +115,62 @@ export function RegisterTieBreakScreen() {
   }
 
   return (
-    <SafeAreaView edges={["left", "right", "bottom"]} style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View>
-          <Text style={styles.eyebrow}>Placar 6 × 6</Text>
-
-          <Text style={styles.title}>Resultado do tie-break</Text>
-
-          <Text style={styles.subtitle}>Informe apenas o placar final.</Text>
-        </View>
-
-        <MatchScoreboard
-          opponentName={match.opponentName}
-          playerGames={progress.score.playerGames}
-          opponentGames={progress.score.opponentGames}
-        />
-
-        <CounterField
-          label="Você"
-          value={playerPoints}
-          disabled={isSubmitting}
-          onChange={setPlayerPoints}
-        />
-
-        <CounterField
-          label={match.opponentName}
-          value={opponentPoints}
-          disabled={isSubmitting}
-          onChange={setOpponentPoints}
-        />
-
-        {submitError ? (
-          <View style={styles.errorCard}>
-            <Text style={styles.errorText}>{submitError}</Text>
-          </View>
-        ) : null}
-
-        <PrimaryButton
-          title="Salvar tie-break"
-          loading={isSubmitting}
-          onPress={() => {
-            void submit();
-          }}
-        />
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
-
-type ScreenStateProps = {
-  children: React.ReactNode;
-};
-
-function ScreenState({ children }: ScreenStateProps) {
-  return (
-    <SafeAreaView edges={["left", "right", "bottom"]} style={styles.container}>
-      <View style={styles.stateContainer}>{children}</View>
-    </SafeAreaView>
+    <ScreenContainer>
+      <ScreenHeader
+        eyebrow="Placar 6 × 6"
+        title="Resultado do tie-break"
+        subtitle="Informe apenas o placar final."
+      />
+      <MatchScoreboard
+        opponentName={match.opponentName}
+        playerGames={progress.score.playerGames}
+        opponentGames={progress.score.opponentGames}
+      />
+      <CounterField
+        label="Você"
+        value={playerPoints}
+        disabled={isSubmitting}
+        onChange={setPlayerPoints}
+      />
+      <CounterField
+        label={match.opponentName}
+        value={opponentPoints}
+        disabled={isSubmitting}
+        onChange={setOpponentPoints}
+      />
+      {submitError ? <InlineError message={submitError} /> : null}
+      <PrimaryButton
+        title="Salvar tie-break"
+        loading={isSubmitting}
+        onPress={() => {
+          void submit();
+        }}
+      />
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-
-  content: {
-    gap: theme.spacing.lg,
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.xl,
-  },
-
-  eyebrow: {
-    color: theme.colors.secondaryText,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-
-  title: {
-    marginTop: theme.spacing.xs,
-    color: theme.colors.text,
-    fontSize: 30,
-    fontWeight: "700",
-  },
-
-  subtitle: {
-    marginTop: theme.spacing.sm,
-    color: theme.colors.secondaryText,
-    fontSize: 16,
-    lineHeight: 24,
-  },
-
-  errorCard: {
-    padding: theme.spacing.md,
-    borderRadius: theme.radius.md,
-    backgroundColor: "#FEE2E2",
-  },
-
-  errorText: {
-    color: theme.colors.danger,
-    fontSize: 15,
-  },
-
-  stateContainer: {
+  centeredState: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     gap: theme.spacing.md,
-    padding: theme.spacing.lg,
   },
-
   stateText: {
+    ...theme.typography.body,
     color: theme.colors.secondaryText,
-    fontSize: 16,
-    lineHeight: 24,
     textAlign: "center",
   },
-
   errorTitle: {
+    ...theme.typography.sectionTitle,
     color: theme.colors.text,
-    fontSize: 20,
-    fontWeight: "700",
     textAlign: "center",
   },
+  errorCard: {
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.dangerSurface,
+  },
+  errorText: { ...theme.typography.body, color: theme.colors.danger },
 });

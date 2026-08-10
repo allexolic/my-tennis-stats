@@ -19,21 +19,9 @@ export function CounterField({
   min = 0,
   max = 99,
 }: CounterFieldProps) {
-  function decrement(): void {
-    if (disabled || value <= min) {
-      return;
-    }
+  const canDecrement = !disabled && value > min;
 
-    onChange(value - 1);
-  }
-
-  function increment(): void {
-    if (disabled || value >= max) {
-      return;
-    }
-
-    onChange(value + 1);
-  }
+  const canIncrement = !disabled && value < max;
 
   return (
     <View style={styles.container}>
@@ -41,17 +29,21 @@ export function CounterField({
 
       <View style={styles.counter}>
         <CounterButton
+          accessibilityLabel={`Diminuir ${label}`}
           label="−"
-          disabled={disabled || value <= min}
-          onPress={decrement}
+          disabled={!canDecrement}
+          onPress={() => onChange(value - 1)}
         />
 
-        <Text style={styles.value}>{value}</Text>
+        <Text accessibilityLabel={`${label}: ${value}`} style={styles.value}>
+          {value}
+        </Text>
 
         <CounterButton
+          accessibilityLabel={`Aumentar ${label}`}
           label="+"
-          disabled={disabled || value >= max}
-          onPress={increment}
+          disabled={!canIncrement}
+          onPress={() => onChange(value + 1)}
         />
       </View>
     </View>
@@ -60,14 +52,24 @@ export function CounterField({
 
 type CounterButtonProps = {
   label: string;
+  accessibilityLabel: string;
   disabled: boolean;
   onPress: () => void;
 };
 
-function CounterButton({ label, disabled, onPress }: CounterButtonProps) {
+function CounterButton({
+  label,
+  accessibilityLabel,
+  disabled,
+  onPress,
+}: CounterButtonProps) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={{
+        disabled,
+      }}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [
@@ -87,9 +89,8 @@ const styles = StyleSheet.create({
   },
 
   label: {
+    ...theme.typography.bodyStrong,
     color: theme.colors.text,
-    fontSize: 16,
-    fontWeight: "600",
   },
 
   counter: {
@@ -100,14 +101,18 @@ const styles = StyleSheet.create({
   },
 
   button: {
-    width: 64,
-    height: 56,
+    minWidth: 64,
+    minHeight: theme.components.inputHeight,
+
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.surface,
+
     borderWidth: 1,
     borderColor: theme.colors.border,
+
+    borderRadius: theme.radius.md,
+
+    backgroundColor: theme.colors.surface,
   },
 
   buttonDisabled: {

@@ -1,26 +1,27 @@
 import {
-    ActivityIndicator,
-    Pressable,
-    StyleSheet,
-    Text,
-    ViewStyle,
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  type StyleProp,
+  type ViewStyle,
 } from "react-native";
 
-import { theme } from "../theme";
+import { theme } from "@/shared/theme";
 
 type PrimaryButtonProps = {
   title: string;
   onPress: () => void;
-  disabled?: boolean;
   loading?: boolean;
-  style?: ViewStyle;
+  disabled?: boolean;
+  style?: StyleProp<ViewStyle>;
 };
 
 export function PrimaryButton({
   title,
   onPress,
-  disabled = false,
   loading = false,
+  disabled = false,
   style,
 }: PrimaryButtonProps) {
   const isDisabled = disabled || loading;
@@ -28,13 +29,16 @@ export function PrimaryButton({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ disabled: isDisabled }}
+      accessibilityState={{
+        disabled: isDisabled,
+        busy: loading,
+      }}
       disabled={isDisabled}
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
-        pressed && !isDisabled && styles.pressed,
-        isDisabled && styles.disabled,
+        isDisabled && styles.disabledButton,
+        pressed && !isDisabled && styles.pressedButton,
         style,
       ]}
     >
@@ -49,25 +53,29 @@ export function PrimaryButton({
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: 56,
+    minHeight: theme.components.inputHeight,
+
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: theme.radius.md,
+
     paddingHorizontal: theme.spacing.lg,
+
+    borderRadius: theme.radius.md,
+
     backgroundColor: theme.colors.primary,
   },
 
-  pressed: {
+  pressedButton: {
     opacity: 0.8,
   },
 
-  disabled: {
-    opacity: 0.45,
+  disabledButton: {
+    opacity: 0.5,
   },
 
   text: {
+    ...theme.typography.bodyStrong,
+
     color: theme.colors.primaryText,
-    fontSize: 17,
-    fontWeight: "600",
   },
 });

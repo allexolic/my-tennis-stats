@@ -2,15 +2,7 @@ import { useCallback } from "react";
 
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 
-import {
-    ActivityIndicator,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
-} from "react-native";
-
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 import { PrimaryButton } from "@/shared/components";
 
@@ -20,6 +12,9 @@ import { StatisticRow } from "../components/StatisticRow";
 
 import { useMatchSummary } from "../hooks/useMatchSummary";
 
+import { Card } from "@/shared/components/Card";
+import { ScreenContainer } from "@/shared/components/ScreenContainer";
+import { ScreenHeader } from "@/shared/components/ScreenHeader";
 import { createMatchSummaryViewModel } from "../view-models/createMatchSummaryViewModel";
 
 type MatchRouteParams = {
@@ -39,124 +34,154 @@ export function MatchSummaryScreen() {
 
   if (isLoading && !summary) {
     return (
-      <ScreenState>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
+      <ScreenContainer scroll={false}>
+        <View style={styles.centeredState}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
 
-        <Text style={styles.stateText}>Carregando resumo...</Text>
-      </ScreenState>
+          <Text style={styles.stateText}>Carregando resumo...</Text>
+        </View>
+      </ScreenContainer>
     );
   }
 
   if (error || !summary) {
     return (
-      <ScreenState>
-        <Text style={styles.errorTitle}>Resumo indisponível</Text>
+      <ScreenContainer scroll={false}>
+        <View style={styles.centeredState}>
+          <Text style={styles.errorTitle}>Resumo indisponível</Text>
 
-        <Text style={styles.stateText}>
-          {error ?? "Não foi possível carregar os dados da partida."}
-        </Text>
+          <Text style={styles.stateText}>
+            {error ?? "Não foi possível carregar os dados da partida."}
+          </Text>
 
-        <PrimaryButton
-          title="Voltar ao início"
-          onPress={() => {
-            router.replace("/");
-          }}
-        />
-      </ScreenState>
+          <PrimaryButton
+            title="Voltar ao início"
+            onPress={() => {
+              router.replace("/");
+            }}
+          />
+        </View>
+      </ScreenContainer>
     );
   }
 
   const viewModel = createMatchSummaryViewModel(summary);
 
   return (
-    <SafeAreaView edges={["left", "right", "bottom"]} style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View>
-          <Text style={styles.eyebrow}>Resumo da partida</Text>
+    <ScreenContainer>
+      <ScreenHeader
+        eyebrow="Resumo da partida"
+        title={`vs. ${viewModel.opponentName}`}
+      />
 
-          <Text style={styles.title}>vs. {viewModel.opponentName}</Text>
-        </View>
-
-        <View style={styles.resultCard}>
+      <Card>
+        <View style={styles.resultContent}>
           <Text style={styles.result}>{viewModel.resultLabel}</Text>
 
           <Text style={styles.winner}>{viewModel.winnerLabel}</Text>
 
-          <Text style={styles.duration}>
+          <Text style={styles.secondaryText}>
             Duração: {viewModel.durationLabel}
           </Text>
 
           {viewModel.tieBreakLabel ? (
-            <Text style={styles.tieBreak}>
+            <Text style={styles.secondaryText}>
               Tie-break: {viewModel.tieBreakLabel}
             </Text>
           ) : null}
         </View>
+      </Card>
 
-        <SummarySection title="Saque">
-          <StatisticRow
-            label="Games de saque"
-            value={viewModel.service.gamesPlayed}
-          />
-
-          <StatisticRow
-            label="Games confirmados"
-            value={viewModel.service.gamesWon}
-          />
-
-          <StatisticRow
-            label="Games perdidos"
-            value={viewModel.service.gamesLost}
-          />
-
-          <StatisticRow
-            label="Aproveitamento"
-            value={viewModel.service.holdPercentageLabel}
-          />
-
-          <StatisticRow
-            label="Segundos serviços válidos"
-            value={viewModel.service.validSecondServes}
-          />
-
-          <StatisticRow
-            label="Duplas faltas"
-            value={viewModel.service.doubleFaults}
-          />
-
-          <StatisticRow
-            label="Pontos perdidos"
-            value={viewModel.service.pointsLost}
-          />
-        </SummarySection>
-
-        <SummarySection title="Devolução">
-          <StatisticRow
-            label="Games devolvendo"
-            value={viewModel.return.gamesPlayed}
-          />
-
-          <StatisticRow label="Breaks" value={viewModel.return.breaks} />
-
-          <StatisticRow
-            label="Aproveitamento"
-            value={viewModel.return.breakPercentageLabel}
-          />
-
-          <StatisticRow
-            label="Pontos ganhos"
-            value={viewModel.return.pointsWon}
-          />
-        </SummarySection>
-
-        <PrimaryButton
-          title="Voltar ao início"
-          onPress={() => {
-            router.replace("/");
-          }}
+      <SummarySection title="Saque">
+        <StatisticRow
+          label="Games de saque"
+          value={viewModel.service.gamesPlayed}
         />
-      </ScrollView>
-    </SafeAreaView>
+
+        <StatisticRow
+          label="Games confirmados"
+          value={viewModel.service.gamesWon}
+        />
+
+        <StatisticRow
+          label="Games perdidos"
+          value={viewModel.service.gamesLost}
+        />
+
+        <StatisticRow
+          label="Aproveitamento"
+          value={viewModel.service.holdPercentageLabel}
+        />
+
+        <StatisticRow
+          label="Segundos serviços válidos"
+          value={viewModel.service.validSecondServes}
+        />
+
+        <StatisticRow
+          label="Duplas faltas"
+          value={viewModel.service.doubleFaults}
+        />
+
+        <StatisticRow
+          label="Pontos perdidos"
+          value={viewModel.service.pointsLost}
+        />
+
+        <StatisticRow
+          label="Média de segundos serviços"
+          value={viewModel.service.averageValidSecondServesPerGameLabel}
+        />
+
+        <StatisticRow
+          label="Média de duplas faltas"
+          value={viewModel.service.averageDoubleFaultsPerGameLabel}
+        />
+
+        <StatisticRow
+          label="Média de pontos perdidos"
+          value={viewModel.service.averagePointsLostPerGameLabel}
+        />
+      </SummarySection>
+
+      <SummarySection title="Devolução">
+        <StatisticRow
+          label="Games devolvendo"
+          value={viewModel.return.gamesPlayed}
+        />
+
+        <StatisticRow label="Games ganhos" value={viewModel.return.gamesWon} />
+
+        <StatisticRow
+          label="Games perdidos"
+          value={viewModel.return.gamesLost}
+        />
+
+        <StatisticRow label="Breaks" value={viewModel.return.breaks} />
+
+        <StatisticRow
+          label="Aproveitamento"
+          value={viewModel.return.breakPercentageLabel}
+        />
+
+        <StatisticRow
+          label="Pontos ganhos"
+          value={viewModel.return.pointsWon}
+        />
+
+        <StatisticRow
+          label="Média de pontos ganhos"
+          value={viewModel.return.averagePointsWonPerGameLabel}
+        />
+      </SummarySection>
+
+      <PrimaryButton
+        title="Voltar ao início"
+        onPress={() => {
+          router.replace("/");
+        }}
+      />
+    </ScreenContainer>
   );
 }
 
@@ -170,56 +195,22 @@ function SummarySection({ title, children }: SummarySectionProps) {
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
 
-      <View style={styles.sectionCard}>{children}</View>
+      <Card>{children}</Card>
     </View>
   );
 }
 
-type ScreenStateProps = {
-  children: React.ReactNode;
-};
-
-function ScreenState({ children }: ScreenStateProps) {
-  return (
-    <SafeAreaView edges={["left", "right", "bottom"]} style={styles.container}>
-      <View style={styles.stateContainer}>{children}</View>
-    </SafeAreaView>
-  );
-}
-
 const styles = StyleSheet.create({
-  container: {
+  centeredState: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: theme.spacing.md,
   },
 
-  content: {
-    gap: theme.spacing.lg,
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.xl,
-  },
-
-  eyebrow: {
-    color: theme.colors.secondaryText,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-
-  title: {
-    marginTop: theme.spacing.xs,
-    color: theme.colors.text,
-    fontSize: 30,
-    fontWeight: "700",
-  },
-
-  resultCard: {
+  resultContent: {
     alignItems: "center",
     gap: theme.spacing.sm,
-    padding: theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.lg,
-    backgroundColor: theme.colors.surface,
   },
 
   result: {
@@ -229,19 +220,13 @@ const styles = StyleSheet.create({
   },
 
   winner: {
+    ...theme.typography.sectionTitle,
     color: theme.colors.text,
-    fontSize: 20,
-    fontWeight: "700",
   },
 
-  duration: {
+  secondaryText: {
+    ...theme.typography.caption,
     color: theme.colors.secondaryText,
-    fontSize: 15,
-  },
-
-  tieBreak: {
-    color: theme.colors.secondaryText,
-    fontSize: 15,
   },
 
   section: {
@@ -249,38 +234,19 @@ const styles = StyleSheet.create({
   },
 
   sectionTitle: {
+    ...theme.typography.sectionTitle,
     color: theme.colors.text,
-    fontSize: 20,
-    fontWeight: "700",
-  },
-
-  sectionCard: {
-    paddingHorizontal: theme.spacing.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.lg,
-    backgroundColor: theme.colors.surface,
-  },
-
-  stateContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: theme.spacing.md,
-    padding: theme.spacing.lg,
   },
 
   stateText: {
+    ...theme.typography.body,
     color: theme.colors.secondaryText,
-    fontSize: 16,
-    lineHeight: 24,
     textAlign: "center",
   },
 
   errorTitle: {
+    ...theme.typography.sectionTitle,
     color: theme.colors.text,
-    fontSize: 20,
-    fontWeight: "700",
     textAlign: "center",
   },
 });

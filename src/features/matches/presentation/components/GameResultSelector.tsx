@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import {
-    PlayerSide,
-    type PlayerSide as PlayerSideType,
+  PlayerSide,
+  type PlayerSide as PlayerSideType,
 } from "@/features/matches/domain/types/PlayerSide";
 
 import { theme } from "@/shared/theme";
@@ -19,7 +19,7 @@ export function GameResultSelector({
   disabled = false,
 }: GameResultSelectorProps) {
   return (
-    <View style={styles.container}>
+    <View accessibilityRole="radiogroup" style={styles.container}>
       <ResultButton
         label="Ganhei"
         selected={value === PlayerSide.PLAYER}
@@ -52,6 +52,12 @@ function ResultButton({
 }: ResultButtonProps) {
   return (
     <Pressable
+      accessibilityRole="radio"
+      accessibilityLabel={label}
+      accessibilityState={{
+        checked: selected,
+        disabled,
+      }}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [
@@ -76,17 +82,22 @@ const styles = StyleSheet.create({
 
   button: {
     flex: 1,
-    minHeight: 60,
+    minHeight: theme.components.inputHeight,
+
     alignItems: "center",
     justifyContent: "center",
+
     borderWidth: 1,
     borderColor: theme.colors.border,
+
     borderRadius: theme.radius.md,
+
     backgroundColor: theme.colors.surface,
   },
 
   selectedButton: {
     borderColor: theme.colors.primary,
+
     backgroundColor: theme.colors.primary,
   },
 
@@ -99,9 +110,8 @@ const styles = StyleSheet.create({
   },
 
   buttonText: {
+    ...theme.typography.bodyStrong,
     color: theme.colors.text,
-    fontSize: 18,
-    fontWeight: "700",
   },
 
   selectedButtonText: {

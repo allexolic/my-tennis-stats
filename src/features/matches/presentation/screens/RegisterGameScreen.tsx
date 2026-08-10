@@ -2,26 +2,23 @@ import { useCallback, useState } from "react";
 
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 
-import {
-    ActivityIndicator,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
-} from "react-native";
-
-import { SafeAreaView } from "react-native-safe-area-context";
+import { StyleSheet, Text, View } from "react-native";
 
 import { RegisterGameError } from "@/features/matches/application/errors/RegisterGameError";
 
 import {
-    PlayerSide,
-    type PlayerSide as PlayerSideType,
+  PlayerSide,
+  type PlayerSide as PlayerSideType,
 } from "@/features/matches/domain/types/PlayerSide";
 
 import { matchDependencies } from "@/features/matches/infrastructure/container/matchDependencies";
 
-import { PrimaryButton } from "@/shared/components";
+import {
+  ErrorState,
+  InlineError,
+  LoadingState,
+  PrimaryButton,
+} from "@/shared/components";
 
 import { theme } from "@/shared/theme";
 
@@ -31,6 +28,8 @@ import { GameResultSelector } from "../components/GameResultSelector";
 
 import { MatchScoreboard } from "../components/MatchScoreboard";
 
+import { ScreenContainer } from "@/shared/components/ScreenContainer";
+import { ScreenHeader } from "@/shared/components/ScreenHeader";
 import { useMatch } from "../hooks/useMatch";
 
 type MatchRouteParams = {
@@ -64,68 +63,62 @@ export function RegisterGameScreen() {
 
   if (isLoading && !match) {
     return (
-      <ScreenState>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-
-        <Text style={styles.stateText}>Carregando game...</Text>
-      </ScreenState>
+      <ScreenContainer scroll={false}>
+        <LoadingState message="Carregando game..." />
+      </ScreenContainer>
     );
   }
 
   if (error || !match || !progress || !matchId) {
     return (
-      <ScreenState>
-        <Text style={styles.errorTitle}>Não foi possível registrar o game</Text>
-
-        <Text style={styles.stateText}>
-          {error ?? "A partida não está disponível."}
-        </Text>
-
-        <PrimaryButton
-          title="Voltar"
-          onPress={() => {
+      <ScreenContainer scroll={false}>
+        <ErrorState
+          title="Não foi possível registrar o game"
+          message={error ?? "A partida não está disponível."}
+          actionLabel="Voltar"
+          onAction={() => {
             router.back();
           }}
         />
-      </ScreenState>
+      </ScreenContainer>
     );
   }
 
   if (progress.isMatchFinished) {
     return (
-      <ScreenState>
-        <Text style={styles.errorTitle}>Partida finalizada</Text>
-
-        <Text style={styles.stateText}>
-          Não é possível registrar novos games.
-        </Text>
-
-        <PrimaryButton
-          title="Voltar para a partida"
-          onPress={() => {
-            router.back();
-          }}
-        />
-      </ScreenState>
+      <ScreenContainer scroll={false}>
+        <View style={styles.centeredState}>
+          <Text style={styles.errorTitle}> Partida finalizada </Text>
+          <Text style={styles.stateText}>
+            Não é possível registrar novos games.
+          </Text>
+          <PrimaryButton
+            title="Voltar para a partida"
+            onPress={() => {
+              router.back();
+            }}
+          />
+        </View>
+      </ScreenContainer>
     );
   }
 
   if (progress.nextRecordType === "SET_TIE_BREAK") {
     return (
-      <ScreenState>
-        <Text style={styles.errorTitle}>Tie-break necessário</Text>
-
-        <Text style={styles.stateText}>
-          O placar está em 6 × 6. O próximo registro deve ser o tie-break.
-        </Text>
-
-        <PrimaryButton
-          title="Voltar para a partida"
-          onPress={() => {
-            router.back();
-          }}
-        />
-      </ScreenState>
+      <ScreenContainer scroll={false}>
+        <View style={styles.centeredState}>
+          <Text style={styles.errorTitle}> Tie-break necessário </Text>
+          <Text style={styles.stateText}>
+            O placar está em 6 × 6. O próximo registro deve ser o tie-break.
+          </Text>
+          <PrimaryButton
+            title="Voltar para a partida"
+            onPress={() => {
+              router.back();
+            }}
+          />
+        </View>
+      </ScreenContainer>
     );
   }
 
@@ -167,171 +160,89 @@ export function RegisterGameScreen() {
   }
 
   return (
-    <SafeAreaView edges={["left", "right", "bottom"]} style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View>
-          <Text style={styles.eyebrow}>Game {match.records.length + 1}</Text>
-
-          <Text style={styles.title}>
-            {isPlayerServing ? "Seu saque" : "Saque do adversário"}
-          </Text>
-
-          <Text style={styles.subtitle}>
-            Registre apenas o que você consegue lembrar ao final do game.
-          </Text>
-        </View>
-
-        <MatchScoreboard
-          opponentName={match.opponentName}
-          playerGames={progress.score.playerGames}
-          opponentGames={progress.score.opponentGames}
+    <ScreenContainer>
+      <ScreenHeader
+        eyebrow={`Game ${match.records.length + 1}`}
+        title={isPlayerServing ? "Seu saque" : "Saque do adversário"}
+        subtitle="Registre apenas o que você consegue lembrar ao final do game."
+      />
+      <MatchScoreboard
+        opponentName={match.opponentName}
+        playerGames={progress.score.playerGames}
+        opponentGames={progress.score.opponentGames}
+      />
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}> Resultado do game </Text>
+        <GameResultSelector
+          value={winner}
+          disabled={isSubmitting}
+          onChange={setWinner}
         />
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Resultado do game</Text>
-
-          <GameResultSelector
-            value={winner}
-            disabled={isSubmitting}
-            onChange={setWinner}
-          />
-        </View>
-
-        {isPlayerServing ? (
-          <>
-            <CounterField
-              label="Segundos serviços válidos"
-              value={validSecondServes}
-              disabled={isSubmitting}
-              onChange={setValidSecondServes}
-            />
-
-            <CounterField
-              label="Duplas faltas"
-              value={doubleFaults}
-              disabled={isSubmitting}
-              onChange={setDoubleFaults}
-            />
-
-            <CounterField
-              label="Pontos perdidos"
-              value={pointsLost}
-              disabled={isSubmitting}
-              onChange={setPointsLost}
-            />
-          </>
-        ) : (
+      </View>
+      {isPlayerServing ? (
+        <>
           <CounterField
-            label="Pontos que ganhei"
-            value={pointsWon}
+            label="Segundos serviços válidos"
+            value={validSecondServes}
             disabled={isSubmitting}
-            onChange={setPointsWon}
+            onChange={setValidSecondServes}
           />
-        )}
-
-        {submitError ? (
-          <View style={styles.errorCard}>
-            <Text style={styles.errorText}>{submitError}</Text>
-          </View>
-        ) : null}
-
-        <PrimaryButton
-          title="Salvar game"
-          loading={isSubmitting}
-          onPress={() => {
-            void submit();
-          }}
+          <CounterField
+            label="Duplas faltas"
+            value={doubleFaults}
+            disabled={isSubmitting}
+            onChange={setDoubleFaults}
+          />
+          <CounterField
+            label="Pontos perdidos"
+            value={pointsLost}
+            disabled={isSubmitting}
+            onChange={setPointsLost}
+          />
+        </>
+      ) : (
+        <CounterField
+          label="Pontos que ganhei"
+          value={pointsWon}
+          disabled={isSubmitting}
+          onChange={setPointsWon}
         />
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
-
-type ScreenStateProps = {
-  children: React.ReactNode;
-};
-
-function ScreenState({ children }: ScreenStateProps) {
-  return (
-    <SafeAreaView edges={["left", "right", "bottom"]} style={styles.container}>
-      <View style={styles.stateContainer}>{children}</View>
-    </SafeAreaView>
+      )}
+      {submitError ? <InlineError message={submitError} /> : null}
+      <PrimaryButton
+        title="Salvar game"
+        loading={isSubmitting}
+        onPress={() => {
+          void submit();
+        }}
+      />
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-
-  content: {
-    gap: theme.spacing.lg,
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.xl,
-  },
-
-  eyebrow: {
-    color: theme.colors.secondaryText,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-
-  title: {
-    marginTop: theme.spacing.xs,
-    color: theme.colors.text,
-    fontSize: 30,
-    fontWeight: "700",
-  },
-
-  subtitle: {
-    marginTop: theme.spacing.sm,
-    color: theme.colors.secondaryText,
-    fontSize: 16,
-    lineHeight: 24,
-  },
-
-  section: {
-    gap: theme.spacing.sm,
-  },
-
-  sectionTitle: {
-    color: theme.colors.text,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-
-  errorCard: {
-    padding: theme.spacing.md,
-    borderRadius: theme.radius.md,
-    backgroundColor: "#FEE2E2",
-  },
-
-  errorText: {
-    color: theme.colors.danger,
-    fontSize: 15,
-    lineHeight: 22,
-  },
-
-  stateContainer: {
+  centeredState: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     gap: theme.spacing.md,
-    padding: theme.spacing.lg,
   },
-
   stateText: {
+    ...theme.typography.body,
     color: theme.colors.secondaryText,
-    fontSize: 16,
-    lineHeight: 24,
     textAlign: "center",
   },
-
   errorTitle: {
+    ...theme.typography.sectionTitle,
     color: theme.colors.text,
-    fontSize: 20,
-    fontWeight: "700",
     textAlign: "center",
   },
+  section: { gap: theme.spacing.sm },
+  sectionTitle: { ...theme.typography.bodyStrong, color: theme.colors.text },
+  errorCard: {
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.dangerSurface,
+  },
+  errorText: { ...theme.typography.body, color: theme.colors.danger },
 });
