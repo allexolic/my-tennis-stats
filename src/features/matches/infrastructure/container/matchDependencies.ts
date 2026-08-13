@@ -17,6 +17,10 @@ import { GetMatchSummary } from "../../application/use-cases/GetMatchSummary";
 
 import { StatisticsCalculator } from "../../domain/services/StatisticsCalculator";
 
+import { GetMatchHistory } from "../../application/use-cases/GetMatchHistory";
+
+import { DeleteMatch } from "../../application/use-cases/DeleteMatch";
+
 const matchRepository = new DrizzleMatchRepository();
 
 const clock = new SystemClock();
@@ -55,4 +59,8 @@ export const matchDependencies = {
     matchEngine,
     statisticsCalculator,
   ),
+
+  getMatchHistory: new GetMatchHistory(matchRepository, matchEngine),
+
+  deleteMatch: new DeleteMatch(matchRepository),
 };

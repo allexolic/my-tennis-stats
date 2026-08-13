@@ -72,6 +72,14 @@ export default function HomeScreen() {
               }}
             />
           ) : null}
+          {!isLoading && !error ? (
+            <PrimaryButton
+              title="Histórico"
+              onPress={() => {
+                router.push("/matches/history");
+              }}
+            />
+          ) : null}
         </View>
       </View>
     </ScreenContainer>
